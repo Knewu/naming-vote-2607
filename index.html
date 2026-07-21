@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>소통공간 명칭 공모 투표</title>
+<style>
+  :root{
+    --blue:#1a73e8; --blue-dk:#1557b0; --blue-bg:#eef4ff;
+    --ink:#1f2733; --ink2:#77808d; --line:#e4e9f0;
+    --bg:#f5f7fa; --card:#ffffff; --red:#d93025;
+    --gold-bg:#fff8e6; --gold-line:#f3dca0;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+    background:var(--bg); color:var(--ink); min-height:100vh;
+    font-size:15px; line-height:1.55;
+  }
+  .wrap{ max-width:560px; margin:0 auto; padding:22px 16px 90px; }
+  header{ text-align:center; padding:8px 0 18px; }
+  .org{ font-size:12px; font-weight:700; color:var(--ink2); letter-spacing:2px; }
+  .title{ font-size:21px; font-weight:900; margin-top:6px; letter-spacing:-0.5px; }
+  .subtitle{ font-size:13px; color:var(--ink2); margin-top:5px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:18px 16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(20,40,80,.04); }
+  .pill{ display:inline-block; font-size:12px; font-weight:800; padding:4px 12px; border-radius:999px; }
+  .pill-live{ background:#e6f4ea; color:#1e7d3c; }
+  .pill-closed{ background:#feeceb; color:var(--red); }
+  .guide{ font-size:13px; color:var(--ink2); margin-top:8px; }
+  .guide b{ color:var(--blue-dk); }
+
+  /* 후보 카드 */
+  .cand{ position:relative; border:1.5px solid var(--line); border-radius:14px;
+    background:#fcfdfe; padding:15px 46px 14px 16px; margin-top:10px;
+    cursor:pointer; transition:border-color .12s, background .12s, box-shadow .12s; }
+  .cand:active{ transform:scale(.995); }
+  .cand.sel{ border-color:var(--blue); background:var(--blue-bg);
+    box-shadow:0 0 0 1px var(--blue) inset; }
+  .cand-name{ font-size:17px; font-weight:800; letter-spacing:-0.3px; }
+  .cand.sel .cand-name{ color:var(--blue-dk); }
+  .cand-reason{ font-size:12.5px; color:var(--ink2); margin-top:5px; line-height:1.5; }
+  .check{ position:absolute; top:50%; right:14px; transform:translateY(-50%);
+    width:24px; height:24px; border-radius:50%; border:1.5px solid #d4dbe5;
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    font-size:13px; color:#fff; font-weight:900; transition:all .12s; }
+  .cand.sel .check{ background:var(--blue); border-color:var(--blue); }
+  .cand.sel .check::after{ content:'✓'; }
+
+  .count-bar{ position:sticky; bottom:0; margin-top:16px; }
+  .btn{ width:100%; padding:15px; border:none; border-radius:13px; font-family:inherit;
+    font-size:15.5px; font-weight:800; cursor:pointer; transition:opacity .12s; }
+  .btn:disabled{ opacity:.45; cursor:default; }
+  .btn-primary{ background:var(--blue); color:#fff; box-shadow:0 4px 14px rgba(26,115,232,.28); }
+  .btn-ghost{ background:#fff; color:var(--ink2); border:1px solid var(--line); }
+  .btn-red{ background:var(--red); color:#fff; }
+  .btn-green{ background:#1e7d3c; color:#fff; }
+  .mt{ margin-top:14px; } .mt2{ margin-top:9px; }
+  .sel-count{ text-align:center; font-size:13px; font-weight:700; color:var(--ink2); margin:12px 0 8px; }
+  .sel-count b{ color:var(--blue); font-size:15px; }
+  .err{ color:var(--red); font-size:13px; font-weight:700; text-align:center; margin-top:10px; }
+  .hide{ display:none !important; }
+  .center{ text-align:center; }
+  .loading{ text-align:center; color:var(--ink2); padding:60px 0; }
+
+  /* 완료 화면 */
+  .done-ic{ font-size:44px; text-align:center; }
+  .done-tx{ font-size:18px; font-weight:900; text-align:center; margin-top:8px; }
+  .done-sub{ font-size:13px; color:var(--ink2); text-align:center; margin-top:6px; line-height:1.6; }
+  .my-picks{ margin-top:14px; }
+  .my-pick{ background:var(--blue-bg); border:1px solid #c9dcf8; color:var(--blue-dk);
+    border-radius:11px; padding:11px 14px; font-weight:800; font-size:15px;
+    margin-top:8px; text-align:center; }
+
+  /* 톱니바퀴 (관리자 진입) */
+  .gear{ position:fixed; right:12px; bottom:12px; width:30px; height:30px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; opacity:.28; cursor:pointer; user-select:none;
+    background:none; border:none; z-index:50; }
+  .gear:active{ opacity:.6; }
+
+  /* PIN 모달 */
+  .overlay{ position:fixed; inset:0; background:rgba(15,25,40,.45); z-index:100;
+    display:flex; align-items:center; justify-content:center; padding:20px; }
+  .modal{ background:#fff; border-radius:18px; padding:22px 18px; width:100%; max-width:320px; }
+  .modal h3{ font-size:16px; font-weight:900; text-align:center; }
+  .pin-input{ width:100%; margin-top:14px; padding:13px; border:1.5px solid var(--line);
+    border-radius:12px; font-family:inherit; font-size:22px; font-weight:800;
+    letter-spacing:8px; text-align:center; outline:none; }
+  .pin-input:focus{ border-color:var(--blue); }
+
+  /* 관리자 화면 */
+  .admin-head{ display:flex; justify-content:space-between; align-items:center; }
+  .admin-tag{ font-size:12px; font-weight:800; color:#7a5e08; background:var(--gold-bg);
+    border:1px solid var(--gold-line); padding:4px 11px; border-radius:999px; }
+  .stat-num{ font-size:34px; font-weight:900; text-align:center; letter-spacing:-1px; }
+  .stat-lbl{ font-size:12.5px; color:var(--ink2); text-align:center; margin-top:2px; }
+  .res-row{ margin-top:15px; }
+  .res-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px; gap:10px; }
+  .res-name{ font-size:14px; font-weight:800; }
+  .res-name.win{ color:var(--blue); }
+  .res-cnt{ font-size:12.5px; color:var(--ink2); font-weight:700; white-space:nowrap; }
+  .res-bar{ height:13px; background:#eef2f8; border-radius:8px; overflow:hidden; }
+  .res-fill{ height:100%; background:var(--blue); border-radius:8px; transition:width .45s ease; }
+  .res-fill.win{ background:linear-gradient(90deg,#1a73e8,#34a0ff); }
+  .meta{ font-size:12px; color:var(--ink2); text-align:center; margin-top:12px; }
+  footer{ text-align:center; font-size:11px; color:#aab2bd; padding:24px 0 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="org">전국전력노동조합</div>
+    <div class="title">🗳️ 소통공간 명칭 공모 투표</div>
+    <div class="subtitle">마음에 드는 공모작을 골라 주세요</div>
+  </header>
+  <div id="app"><div class="loading">불러오는 중…</div></div>
+  <footer>본 투표는 익명으로 진행됩니다 · 무단 배포 금지</footer>
+</div>
+
+<button class="gear" onclick="openGear()" aria-label="관리">⚙️</button>
+
+<div class="overlay hide" id="pinModal" onclick="closeGear(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>관리자 확인</h3>
+    <input type="password" id="pinInput" class="pin-input" inputmode="numeric"
+      maxlength="6" placeholder="PIN" autocomplete="off"
+      onkeydown="if(event.key==='Enter')checkPin()">
+    <button class="btn btn-primary mt" onclick="checkPin()">확인</button>
+    <button class="btn btn-ghost mt2" onclick="closeGear()">닫기</button>
+    <div class="err hide" id="pinErr">PIN이 올바르지 않습니다.</div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script>
+/* ===== Firebase (기존과 동일 프로젝트 · 별도 데이터 경로) ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDUFwsNEBzTZxr8EJuY2BZkYTEBadQoMk8",
+  authDomain: "knewu-64318.firebaseapp.com",
+  databaseURL: "https://knewu-64318-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "knewu-64318",
+  storageBucket: "knewu-64318.firebasestorage.app",
+  messagingSenderId: "301755569133",
+  appId: "1:301755569133:web:9bd85133d084c041368de4"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const voteRef = db.ref('contest_naming_vote_v1'); // ← 이 투표 전용 경로 (기존 투표와 완전 분리)
+
+/* ===== 설정 ===== */
+const ADMIN_PIN = '6011';
+const MAX_PICK = 2;
+const CANDS = [
+  { name:'이(利)심전(電)심',
+    reason:"'이심'은 우리에게 이로움·함께하는 새로움을, '전심'은 1만 7천여 전력노동자의 생각과 마음을 표현" },
+  { name:'빛의광장',
+    reason:'노사간 소통과 회사 소식 및 정보 공유를 함께 담는 공간을 의미' },
+  { name:'38도씨',
+    reason:'36.5도보다 뜨거운 38개 지부 조합원들의 열띤 토론의 장' },
+  { name:'우주 (우리들의 주파수)',
+    reason:'서로의 생각을 공유하고 주파수를 맞춰가는 공간' },
+  { name:'공감회로',
+    reason:'조합원의 의견이 집행부에 전달되고, 집행부의 답변과 정책이 다시 전달되는 소통의 순환을 의미' },
+  { name:'이롬새롬',
+    reason:'한전인의 이로운 이야기, 새 생각의 장' },
+  { name:'쉿! 비미리야',
+    reason:'누구도 알지 못하는 비밀이야기를 나눌 수 있는 곳' }
+];
+
+/* ===== 익명 브라우저 ID ===== */
+const LS_VOTER = 'knewu_naming_voter_v1';
+function voterId(){
+  try{
+    let v = localStorage.getItem(LS_VOTER);
+    if(!v){ v = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+      localStorage.setItem(LS_VOTER, v); }
+    return v;
+  }catch(e){ return 'v'+Math.random().toString(36).slice(2,10); }
+}
+
+/* ===== 상태 ===== */
+let session = null;      // Firebase 데이터 { status, votes:{id:[i,i]} }
+let loaded = false;
+let myPicks = [];        // 화면에서 고르는 중인 선택
+let editing = false;     // 제출 후 '선택 변경' 모드
+let isAdmin = false;
+try{ isAdmin = sessionStorage.getItem('knewu_naming_admin')==='1'; }catch(e){}
+
+const $ = (id)=>document.getElementById(id);
+function esc(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function status(){ return (session && session.status) ? session.status : 'open'; }
+function myVote(){ return session && session.votes ? session.votes[voterId()] : undefined; }
+
+/* ===== 실시간 구독 ===== */
+voteRef.on('value', (snap)=>{
+  session = snap.val();
+  loaded = true;
+  render();
+});
+
+/* ====== 렌더 ====== */
+function render(){
+  const app = $('app');
+  if(!loaded){ app.innerHTML = '<div class="loading">불러오는 중…</div>'; return; }
+  if(isAdmin){ app.innerHTML = viewAdmin(); return; }
+  if(status()==='closed'){ app.innerHTML = viewClosed(); return; }
+  const prev = myVote();
+  if(prev && !editing){ app.innerHTML = viewDone(prev); return; }
+  app.innerHTML = viewVote();
+}
+
+/* ====== ① 투표 화면 ====== */
+function viewVote(){
+  const cards = CANDS.map((c,i)=>`
+    <div class="cand ${myPicks.includes(i)?'sel':''}" onclick="pick(${i})">
+      <div class="cand-name">${esc(c.name)}</div>
+      <div class="cand-reason">${esc(c.reason)}</div>
+      <div class="check"></div>
+    </div>`).join('');
+  return `<div class="card">
+    <span class="pill pill-live">● 투표 진행 중</span>
+    <div class="guide">🕶️ <b>익명 투표</b>입니다. 최대 <b>${MAX_PICK}개</b>까지 선택할 수 있어요. (1개만 골라도 제출 가능)</div>
+    ${cards}
+    <div class="sel-count"><b>${myPicks.length}</b> / ${MAX_PICK}개 선택됨</div>
+    <button class="btn btn-primary" id="submitBtn" onclick="submitVote()" ${myPicks.length===0?'disabled':''}>투표 제출</button>
+    ${editing?'<button class="btn btn-ghost mt2" onclick="cancelEdit()">변경 취소</button>':''}
+    <div class="err hide" id="vErr"></div>
+  </div>`;
+}
+function pick(i){
+  const k = myPicks.indexOf(i);
+  if(k>=0){ myPicks.splice(k,1); }
+  else{
+    if(myPicks.length>=MAX_PICK){
+      // 가장 먼저 고른 것을 빼고 새 선택으로 교체하지 않고, 안내만
+      const err = $('vErr');
+      if(err){ err.textContent = `최대 ${MAX_PICK}개까지만 선택할 수 있어요. 다른 항목을 해제한 뒤 선택해 주세요.`; err.classList.remove('hide');
+        setTimeout(()=>err.classList.add('hide'), 2200); }
+      return;
+    }
+    myPicks.push(i);
+  }
+  render();
+}
+function submitVote(){
+  if(myPicks.length===0) return;
+  if(status()==='closed'){ alert('투표가 이미 마감되었습니다.'); render(); return; }
+  const payload = myPicks.slice().sort((a,b)=>a-b);
+  voteRef.child('votes').child(voterId()).set(payload)
+    .then(()=>{ editing = false; render(); })
+    .catch(()=>{ const err=$('vErr'); if(err){ err.textContent='제출에 실패했어요. 네트워크를 확인하고 다시 시도해 주세요.'; err.classList.remove('hide'); } });
+}
+function cancelEdit(){ editing = false; myPicks = []; render(); }
+
+/* ====== ② 제출 완료 화면 ====== */
+function viewDone(prev){
+  const picks = (Array.isArray(prev)?prev:[prev]).map(i=>
+    `<div class="my-pick">${esc(CANDS[i]?.name || '')}</div>`).join('');
+  return `<div class="card">
+    <div class="done-ic">✅</div>
+    <div class="done-tx">투표 완료</div>
+    <div class="done-sub">익명으로 안전하게 제출되었습니다.<br>마감 전까지 언제든 선택을 <b>변경</b>할 수 있어요.</div>
+    <div class="my-picks">${picks}</div>
+    <button class="btn btn-ghost mt" onclick="startEdit()">선택 변경</button>
+  </div>`;
+}
+function startEdit(){
+  const prev = myVote();
+  myPicks = Array.isArray(prev) ? prev.slice() : [];
+  editing = true; render();
+}
+
+/* ====== ③ 마감 화면 (참여자) ====== */
+function viewClosed(){
+  const voted = !!myVote();
+  return `<div class="card center">
+    <span class="pill pill-closed">■ 투표 마감</span>
+    <div class="done-ic mt">🙏</div>
+    <div class="done-tx">투표가 마감되었습니다</div>
+    <div class="done-sub">${voted?'소중한 한 표 감사합니다!':'참여해 주신 모든 분께 감사드립니다.'}<br>결과는 추후 별도로 안내드릴 예정입니다.</div>
+  </div>`;
+}
+
+/* ====== ④ 관리자 화면 ====== */
+function viewAdmin(){
+  const votes = (session && session.votes) || {};
+  const total = Object.keys(votes).length;
+  const counts = CANDS.map(()=>0);
+  Object.values(votes).forEach(v=>{
+    (Array.isArray(v)?v:[v]).forEach(i=>{ if(i>=0 && i<counts.length) counts[i]++; });
+  });
+  const max = Math.max(1, ...counts);
+  const rows = CANDS.map((c,i)=>{
+    const cnt = counts[i];
+    const pct = total ? Math.round(cnt/total*100) : 0;
+    const win = cnt===max && cnt>0;
+    return `<div class="res-row">
+      <div class="res-head">
+        <span class="res-name ${win?'win':''}">${win?'👑 ':''}${esc(c.name)}</span>
+        <span class="res-cnt">${cnt}표 · ${pct}%</span>
+      </div>
+      <div class="res-bar"><div class="res-fill ${win?'win':''}" style="width:${(cnt/max*100)||0}%"></div></div>
+    </div>`;
+  }).join('');
+  const open = status()==='open';
+  return `<div class="card">
+    <div class="admin-head">
+      <span class="admin-tag">⚙️ 관리자 모드</span>
+      <span class="pill ${open?'pill-live':'pill-closed'}">${open?'● 진행 중':'■ 마감됨'}</span>
+    </div>
+    <div class="mt">
+      <div class="stat-num">${total}<span style="font-size:16px;color:var(--ink2);font-weight:700;">명</span></div>
+      <div class="stat-lbl">실시간 참여 인원 (자동 갱신)</div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-size:15px;font-weight:900;">실시간 집계 <span style="font-size:12px;color:var(--ink2);font-weight:700;">(관리자에게만 보임)</span></div>
+    ${rows}
+    <div class="meta">복수 선택 가능이므로 득표율 합계는 100%를 넘을 수 있습니다.<br>% = 참여 인원 대비 득표율</div>
+  </div>
+  <div class="card">
+    ${open
+      ? `<button class="btn btn-red" onclick="adminClose()">🔒 투표 마감하기</button>`
+      : `<button class="btn btn-green" onclick="adminReopen()">🔓 투표 재개하기</button>`}
+    <button class="btn btn-ghost mt2" onclick="adminReset()">🗑️ 투표 전체 초기화</button>
+    <button class="btn btn-ghost mt2" onclick="adminExit()">관리자 모드 나가기</button>
+  </div>`;
+}
+function adminClose(){
+  if(!confirm('투표를 마감할까요?\n마감 후 참여자는 더 이상 투표할 수 없습니다.\n(결과는 계속 관리자만 볼 수 있어요)')) return;
+  voteRef.child('status').set('closed');
+  voteRef.child('closedAt').set(Date.now());
+}
+function adminReopen(){
+  if(!confirm('투표를 다시 열까요?')) return;
+  voteRef.child('status').set('open');
+}
+function adminReset(){
+  if(!confirm('⚠️ 모든 투표 기록이 삭제됩니다. 정말 초기화할까요?')) return;
+  if(!confirm('되돌릴 수 없습니다. 최종 확인해 주세요.')) return;
+  voteRef.set({ status:'open', votes:null, resetAt: Date.now() });
+}
+function adminExit(){
+  isAdmin = false;
+  try{ sessionStorage.removeItem('knewu_naming_admin'); }catch(e){}
+  render();
+}
+
+/* ====== 톱니바퀴 · PIN ====== */
+function openGear(){
+  if(isAdmin){ render(); return; }
+  $('pinModal').classList.remove('hide');
+  $('pinErr').classList.add('hide');
+  const inp = $('pinInput'); inp.value=''; setTimeout(()=>inp.focus(), 50);
+}
+function closeGear(e){
+  if(e && e.target !== e.currentTarget) return;
+  $('pinModal').classList.add('hide');
+}
+function checkPin(){
+  const v = ($('pinInput').value||'').trim();
+  if(v === ADMIN_PIN){
+    isAdmin = true;
+    try{ sessionStorage.setItem('knewu_naming_admin','1'); }catch(e){}
+    $('pinModal').classList.add('hide');
+    render();
+  } else {
+    $('pinErr').classList.remove('hide');
+    $('pinInput').value=''; $('pinInput').focus();
+  }
+}
+</script>
+</body>
+</html>
