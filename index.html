@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>전력아고라 네이밍 공모 당선작 투표</title>
+<title>소통공간 명칭 공모 투표</title>
 <style>
   :root{
     --blue:#1a73e8; --blue-dk:#1557b0; --blue-bg:#eef4ff;
@@ -111,7 +111,7 @@
 <div class="wrap">
   <header>
     <div class="org">전국전력노동조합</div>
-    <div class="title">🗳️전력아고라 네이밍 공모 당선작 투표</div>
+    <div class="title">🗳️ 소통공간 명칭 공모 투표</div>
     <div class="subtitle">마음에 드는 공모작을 골라 주세요</div>
   </header>
   <div id="app"><div class="loading">불러오는 중…</div></div>
@@ -147,7 +147,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const voteRef = db.ref('contest_naming_vote_v1'); // ← 이 투표 전용 경로 (기존 투표와 완전 분리)
+const voteRef = db.ref('contest_naming_vote_round2_v1'); // ← 2차 투표 전용 경로 (1차 결과와 완전 분리)
 
 /* ===== 설정 ===== */
 const ADMIN_PIN = '6011';
@@ -157,16 +157,10 @@ const CANDS = [
     reason:"'이심'은 우리에게 이로움·함께하는 새로움을, '전심'은 1만 7천여 전력노동자의 생각과 마음을 표현" },
   { name:'빛의광장',
     reason:'노사간 소통과 회사 소식 및 정보 공유를 함께 담는 공간을 의미' },
-  { name:'38°C',
-    reason:'36.5도 체온보다 뜨거운 38개 지부 조합원들의 열띤 토론의 장' },
   { name:'우주 (우리들의 주파수)',
     reason:'서로의 생각을 공유하고 주파수를 맞춰가는 공간' },
   { name:'공감회로',
-    reason:'조합원의 의견이 집행부에 전달되고, 집행부의 답변과 정책이 다시 전달되는 소통의 순환을 의미' },
-  { name:'이롬새롬',
-    reason:'한전인의 이로운 이야기, 새 생각의 장' },
-  { name:'쉿! 비미리야',
-    reason:'누구도 알지 못하는 비밀이야기를 나눌 수 있는 곳' }
+    reason:'조합원의 의견이 집행부에 전달되고, 집행부의 답변과 정책이 다시 전달되는 소통의 순환을 의미' }
 ];
 
 /* ===== 익명 브라우저 ID ===== */
